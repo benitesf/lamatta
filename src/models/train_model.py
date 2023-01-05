@@ -12,15 +12,20 @@ def train(input, pasos, epochs, output):
     # split into train and test 
     df = pd.read_csv(input)
     values = df.values
-    n_train_days = 312+316+318+279+226 - (30+pasos)
-    train = values[:n_train_days, :]
-    test = values[n_train_days:, :]
+    
+    sep = values.shape[0] - 30
+    
+    train = values[:sep, :]
+    val = values[sep + 1:, :]
+    
     # split into input and outputs
     x_train, y_train = train[:, :-1], train[:, -1]
-    x_val, y_val = test[:, :-1], test[:, -1]
+    x_val, y_val = val[:, :-1], val[:, -1]
+    
     # reshape input to be 3D [samples, timesteps, features]
-    x_train = x_train.reshape((x_train.shape[0], 1, x_train.shape[1]))
+    x_train = x_train.reshape((x_train.shape[0], 1, x_train.shape[1]))    
     x_val = x_val.reshape((x_val.shape[0], 1, x_val.shape[1]))
+    
     print(x_train.shape, y_train.shape, x_val.shape, y_val.shape)
     """Se ejecutará nuestro modelo y mostraremos como se comporta la maquina despues de 40 épocas."""
     #aqui se activa el rastreado de memoria para saber el consumo de memoria en el modelo (Cuando empieza a correr el modelo)
