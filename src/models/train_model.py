@@ -72,7 +72,7 @@ def crear_modeloFF(pasos):
     model.add(Dense(pasos, input_shape=(1,pasos), activation='tanh'))
     model.add(Flatten())
     model.add(Dense(1, activation='tanh'))
-    model.compile(loss='mean_absolute_error', optimizer='Adam', metrics=["mse","mae","mape"])
+    model.compile(loss='mean_absolute_error', optimizer='sgd', metrics=["mse","mae","mape"])
     model.summary()
     return model
 

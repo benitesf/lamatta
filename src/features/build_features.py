@@ -32,7 +32,7 @@ def build_feature(input, pasos, output):
     reframed.describe().to_csv(REPORT_DATA_PATH + "feature_describe.csv")
     reframed.to_csv(output, index=False)
 
-    return scaler
+    return scaler, values, scaled
 
 # convert series to supervised learning
 def series_to_supervised(data, n_in=1, n_out=1, dropnan=True):
