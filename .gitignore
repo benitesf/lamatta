@@ -130,5 +130,6 @@ dmypy.json
 
 .idea/
 
-*.csv
-*.png
+/reports/data/*.csv
+/reports/figures/*.png
+/models/*.h5
