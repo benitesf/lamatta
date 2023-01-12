@@ -11,6 +11,7 @@ def build_feature(input, pasos, output):
     df.index = pd.to_datetime(df.index)
     # Creamos un indice y asignamos como indice al campo Fecha, por que trabajaremos con serie de tiempo
     df = df.resample('D').mean()
+    df = df.rolling(2).mean()    
     # Verificar valores nulos
     df.loc[df['VV'].isnull()]
     # Detectar valores extraños

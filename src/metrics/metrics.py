@@ -27,3 +27,17 @@ def create_table_metrics(y_true, y_pred):
 
 def mean_absolute_deviation(data):
     return np.average(np.abs(data - data.mean()))
+
+def calculate_metrics(y_true, y_pred):
+    mse = mean_squared_error(y_true, y_pred)
+    mae = mean_absolute_error(y_true, y_pred)
+    mape = mean_absolute_percentage_error(y_true, y_pred)
+    mad_true= mean_absolute_deviation(y_true)
+    mad_pred = mean_absolute_deviation(y_pred)  
+    print("Metricas para primera semana: \n")
+    print(f"MSE: {mse}")
+    print(f"MAE: {mae}")
+    print(f"MAPE: {mape}")
+    print(f"MAD real: {mad_true}")
+    print(f"MAD pred: {mad_pred}")
+    print("\n\n")

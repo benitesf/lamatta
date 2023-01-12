@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 
 from src.data.make_dataset import xlsx_to_csv, split_train_test
-from src.features.build_features import build_feature, series_to_supervised
+from src.features.build_features import build_feature
 from src.models.train_model import train
-from src.models.predict_model import predict
-from src.metrics.metrics import create_table_metrics, mean_absolute_deviation
-from src.visualization.visualize import scaling_comparison, scaling_histogram_comparison
+from src.models.predict_model import predict, predict_test, predict_n_days
+from src.metrics.metrics import create_table_metrics, calculate_metrics
+from src.visualization.visualize import scaling_comparison, scaling_histogram_comparison, true_and_prediction, plot_accumulative_prediction
 
-from sklearn.metrics import mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 
 import pandas as pd
 import numpy as np
@@ -101,12 +100,6 @@ plt.title('validate loss')
 plt.savefig(FIGUR_PATH + "validate_loss.png")
 plt.show()
 
-plt.plot(history.history['mse'])
-plt.plot(history.history['val_mse'])
-plt.title('Accuracy')
-plt.savefig(FIGUR_PATH + "accuracy.png")
-plt.show()
-
 """
 Saca las metricas en una tabla por cada prediccion
 """
@@ -133,8 +126,12 @@ compara2[['real',	'prediccion',	'diferencia']]
 compara2.describe()
 compara2.to_csv('./reports/data/comparacion.csv')
 
-compara2.plot()
+compara2.plot(title="Conjunto de Validacion")
 plt.savefig(FIGUR_PATH + "comparacion.png")
+
+"""
+********************************************************************
+"""
 
 """
 Predicción de test (2021)
@@ -149,52 +146,45 @@ print(f"Fecha minima: {df.index.min()}")
 print(f"Fecha maxima: {df.index.max()}")
 """## Preparamos los datos para Test para darle los pesos correspondientes"""
 
+"""
+Predicción y gráficos del conjuntos de datos TESTING
+"""
 values = df['2021-08-20':'2021-09-23'].values.astype('float32')
-
-# normalize features
-scaled = scaler.fit_transform(values)
-
-reframed = series_to_supervised(scaled, PASOS, 1)
-x_test = reframed[reframed.columns[:PASOS]].values
-y_test = reframed[reframed.columns[PASOS]].values
-
-x_test = x_test.reshape((x_test.shape[0], 1, x_test.shape[1]))
-print(x_test.shape)
-
-"""PREDICCION"""
-y_pred = model.predict(x_test)
+y_true, y_pred = predict_test(model, scaler, values, PASOS)
 
 """
 Saca las metricas en una tabla por cada prediccion
 """
-df_res = create_table_metrics(y_test, y_pred)
+df_res = create_table_metrics(y_true, y_pred)
 df_res.to_csv('./reports/data/pronostico_metrics.csv')
 
 """METRICAS"""
-mse = mean_squared_error(y_test, y_pred)
-mae = mean_absolute_error(y_test, y_pred)
-mape = mean_absolute_percentage_error(y_test, y_pred)
-mad_real = mean_absolute_deviation(y_test)
-mad_pred = mean_absolute_deviation(y_pred)
-print("Metricas para primera semana: \n")
-print(f"MSE: {mse}")
-print(f"MAE: {mae}")
-print(f"MAPE: {mape}")
-print(f"MAD real: {mad_real}")
-print(f"MAD pred: {mad_pred}")
-print("\n\n")
+calculate_metrics(y_true, y_pred)
 
-"""GRAFICOS"""
-y_pred_inv = scaler.inverse_transform(y_pred)
-y_test_inv = scaler.inverse_transform(y_test.reshape((-1, 1)))
-print("INVERSE TRANSFORM:\n")
-print(y_pred_inv)
-print("\n")
+"""
+CSV y grafico de la predicción
+"""
+true_and_prediction(y_true, y_pred, scaler, "prediccion")
 
-"""## Visualizamos el pronóstico"""
-df_pronostico = pd.DataFrame({"real": y_test_inv.ravel(), "pronostico": y_pred_inv.ravel()})
-df_pronostico.to_csv('./reports/data/pronostico.csv')
+"""
+********************************************************************
+"""
+"""
+Predicción acumulativa de 7 días
+"""
+print("*****************************************")
+print("Predicción 7 Dias")
+print("*****************************************")
+N = 7
 
-plot = df_pronostico.plot()
-fig = plot.get_figure()
-fig.savefig(FIGUR_PATH + "prediccion.png")
+e_dt = np.datetime64("2021-09-23")
+s_dt = e_dt - PASOS
+
+start = np.datetime_as_string(s_dt)
+end = np.datetime_as_string(e_dt)
+
+values = df['2021-09-16':'2021-09-23'].values.astype('float32')
+n_pred, acc = predict_n_days(model, scaler, values, PASOS, N)
+
+plot_accumulative_prediction(acc, N)
+print(n_pred)
