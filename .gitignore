@@ -133,3 +133,5 @@ dmypy.json
 /reports/data/*.csv
 /reports/figures/*.png
 /models/*.h5
+/data/interim/*.csv
+/data/processed/*csv
