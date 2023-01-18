@@ -45,3 +45,6 @@ def plot_accumulative_prediction(data, ndays):
     plt.title(f"Predicción {ndays} días")
     fig.savefig(FIGURE_PATH + f"prediccion_{ndays}.png")
     plt.show()
+    
+    df = pd.DataFrame({"prediccion": data.ravel()})
+    df.to_csv(REPORT_DATA + f"prediccion_{ndays}_days.csv", index=False)

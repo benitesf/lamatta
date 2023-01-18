@@ -30,7 +30,7 @@ mayor facilidad y extrae las columnas necesarias.
 xlsx_to_csv(INPUT_FILE, sheet_name='venta_diaria', cols=['FECHA', 'VV'], output=INTER_FILE)
 
 split_train_test(INTER_FILE,
-                 train_range=["2017-01-02", "2020-12-31"], 
+                 train_range=["2017-01-02", "2020-12-31"],
                  test_range=["2021-01-02", "2021-09-23"],
                  output_path=INTER_PATH)
 
@@ -149,7 +149,11 @@ print(f"Fecha maxima: {df.index.max()}")
 """
 Predicción y gráficos del conjuntos de datos TESTING
 """
-values = df['2021-08-20':'2021-09-23'].values.astype('float32')
+start = "2021-08-20"
+end = "2021-09-23"
+
+print(f"\nTesting de {start} a {end}")
+values = df[start:end].values.astype('float32')
 y_true, y_pred = predict_test(model, scaler, values, PASOS)
 
 """
@@ -183,7 +187,7 @@ s_dt = e_dt - PASOS
 start = np.datetime_as_string(s_dt)
 end = np.datetime_as_string(e_dt)
 
-values = df['2021-09-16':'2021-09-23'].values.astype('float32')
+values = df[s_dt:e_dt].values.astype('float32')
 n_pred, acc = predict_n_days(model, scaler, values, PASOS, N)
 
 plot_accumulative_prediction(acc, N)

@@ -11,7 +11,7 @@ def build_feature(input, pasos, output):
     df.index = pd.to_datetime(df.index)
     # Creamos un indice y asignamos como indice al campo Fecha, por que trabajaremos con serie de tiempo
     df = df.resample('D').mean()
-    df = df.rolling(2).mean()    
+    df = df.rolling(2).mean()
     # Verificar valores nulos
     df.loc[df['VV'].isnull()]
     # Detectar valores extraños
@@ -19,6 +19,10 @@ def build_feature(input, pasos, output):
     # Reemplazar valores NaN
     df['VV'] = df['VV'].fillna(0)
     df = df.drop(df[df['VV']==0].index)
+    print("\nBuild feature:\n")
+    print(df.info())
+    print(df.head())
+    print("\n")
     # load dataset
     values = df.values
     # ensure all data is float
