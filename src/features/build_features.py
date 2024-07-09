@@ -6,25 +6,28 @@ import numpy as np
 
 REPORT_DATA_PATH = "./reports/data/"
 
-def build_feature(input, pasos, output):
-    df = pd.read_csv(input).set_index("FECHA")
+def build_feature(input, pasos, colname, output):
+    df = pd.read_csv(input, index_col=False).set_index("FECHA")
     df.index = pd.to_datetime(df.index)
+    
     # Creamos un indice y asignamos como indice al campo Fecha, por que trabajaremos con serie de tiempo
-    df = df.resample('D').mean()
-    df = df.rolling(2).mean()
+    # df = df.resample('D').mean()
+    # df = df.rolling(2).mean()
+    
     # Verificar valores nulos
-    df.loc[df['VV'].isnull()]
+    # df.loc[df[colname].isnull()]
+    
     # Detectar valores extraños
-    df[df['VV'].isin([np.nan, np.inf, -np.inf])]
+    # df[df[colname].isin([np.nan, np.inf, -np.inf])]
+    
     # Reemplazar valores NaN
-    df['VV'] = df['VV'].fillna(0)
-    df = df.drop(df[df['VV']==0].index)
-    print("\nBuild feature:\n")
-    print(df.info())
-    print(df.head())
-    print("\n")
+    # df = df[df[colname].str.isnumeric()]
+    df[colname] = df[colname].fillna(0)
+    df = df.drop(df[df[colname]==0].index)
+
     # load dataset
     values = df.values
+    
     # ensure all data is float
     values = values.astype('float32')
     # normalize features

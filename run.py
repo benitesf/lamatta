@@ -1,25 +1,27 @@
 # -*- coding: utf-8 -*-
 
-from src.data.make_dataset import xlsx_to_csv, split_train_test
+from src.data.make_dataset import xlsx_to_csv_2, split_train_test
 from src.features.build_features import build_feature
 from src.models.train_model import train
 from src.models.predict_model import predict, predict_test, predict_n_days
 from src.metrics.metrics import create_table_metrics, calculate_metrics
 from src.visualization.visualize import scaling_comparison, scaling_histogram_comparison, true_and_prediction, plot_accumulative_prediction
-
+from dateutil.relativedelta import relativedelta
 
 import pandas as pd
 import numpy as np
 import psutil
 import tracemalloc
 import matplotlib.pyplot as plt
+import datetime
+import sys
 
 INTER_PATH = "./data/interim/"
 
-INPUT_FILE = "./data/raw/ventas_lamatta.xlsx"
-INTER_FILE = "./data/interim/venta_diaria.csv"
-PROCC_FILE = "./data/processed/train_supervisado.csv"
-MODEL_FILE = "./models/lamatta.h5"
+INPUT_FILE = "./data/raw/venta_mensual.xlsx"
+INTER_FILE = "./data/interim/venta_mensual.csv"
+PROCC_FILE = "./data/processed/venta_mensual_train.csv"
+MODEL_FILE = "./models/venta_mensual.h5"
 FIGUR_PATH = "./reports/figures/"
 
 """Cargamos nuestro Dataset
@@ -27,21 +29,27 @@ FIGUR_PATH = "./reports/figures/"
 Prepara el dataset raw convirtiendolo a csv para poder manejarlo con
 mayor facilidad y extrae las columnas necesarias.
 """
-xlsx_to_csv(INPUT_FILE, sheet_name='venta_diaria', cols=['FECHA', 'VV'], output=INTER_FILE)
+xlsx_to_csv_2(INPUT_FILE,
+              sheet_name='Hoja2',
+              cols=['AÑO', 'MES', 'PRODUCTO', 'CANTIDAD PRODUCIDA'],
+              output=INTER_FILE)
 
 split_train_test(INTER_FILE,
-                 train_range=["2017-01-02", "2020-12-31"],
-                 test_range=["2021-01-02", "2021-09-23"],
+                 train_range=["2017-01-01", "2022-05-01"],
+                 test_range=["2022-06-01", "2024-04-01"],
                  output_path=INTER_PATH)
 
-""" Creamos los features extraer los datos que alimenta el modelo el 7 verlo en el colob
+""" Creamos los features
 
 Crea el dataset con la estructura necesario para los input de nuestro modelo
 de predicción. Y retorna el scaler usado en nuestros datos para posteriores
 predicciones.
 """
 PASOS = 7
-scaler, data, scaled = build_feature(INTER_PATH + "inter_train.csv", PASOS, PROCC_FILE)
+scaler, data, scaled = build_feature(INTER_PATH + "inter_train.csv",
+                                     PASOS,
+                                     'VENTAS',
+                                     PROCC_FILE)
 
 """
 Plot scaling info
@@ -65,7 +73,10 @@ Realiza la predicción y retorna los dataset de entrenamiento, validación,
 el modelo, y las métricas.
 """
 EPOCHS = 70
-x_train, y_train, x_val, y_val, history, model = train(PROCC_FILE, PASOS, EPOCHS, MODEL_FILE)
+x_train, y_train, x_val, y_val, history, model = train(PROCC_FILE,
+                                                       PASOS,
+                                                       EPOCHS,
+                                                       MODEL_FILE)
 
 history.history['loss']
 history.history['val_loss']
@@ -84,21 +95,26 @@ results = predict(MODEL_FILE, x_val)
 print(len(results))
 
 """ Reports """
-plt.scatter(range(len(y_val)), y_val,c='g')
-plt.scatter(range(len(results)), results,c='r')
+y_plt = plt.scatter(range(len(y_val)), y_val, marker='o', c='g')
+r_plt =plt.scatter(range(len(results)), results, marker='x', c='r')
+plt.legend((y_plt, r_plt),
+           ('real', 'prediccion'),
+           scatterpoints=1,
+           loc='upper right',
+           ncol=1)
 plt.title('validate')
 plt.savefig(FIGUR_PATH + "validate.png")
-plt.show()
+# plt.show()
 
 plt.plot(history.history['loss'])
 plt.title('loss')
 plt.savefig(FIGUR_PATH + "loss.png")
-plt.show()
+# plt.show()
 
 plt.plot(history.history['val_loss'])
 plt.title('validate loss')
 plt.savefig(FIGUR_PATH + "validate_loss.png")
-plt.show()
+# plt.show()
 
 """
 Saca las metricas en una tabla por cada prediccion
@@ -134,26 +150,28 @@ plt.savefig(FIGUR_PATH + "comparacion.png")
 """
 
 """
-Predicción de test (2021)
+Predicción de test (2023-2024)
 """
 df = pd.read_csv(INTER_PATH + "inter_test.csv").set_index("FECHA")
 df.index = pd.to_datetime(df.index)
+df = df[df['VENTAS'].str.isnumeric()]
+
+start = df.index.min()
+end = df.index.max()
 
 print("*****************************************")
 print("TEST")
 print("*****************************************")
-print(f"Fecha minima: {df.index.min()}")
-print(f"Fecha maxima: {df.index.max()}")
+print(f"Fecha minima: {start}")
+print(f"Fecha maxima: {end}")
 """## Preparamos los datos para Test para darle los pesos correspondientes"""
 
 """
 Predicción y gráficos del conjuntos de datos TESTING
 """
-start = "2021-08-20"
-end = "2021-09-23"
-
 print(f"\nTesting de {start} a {end}")
-values = df[start:end].values.astype('float32')
+# values = df[start:end].values.astype('float32')
+values = df.values.astype('float32')
 y_true, y_pred = predict_test(model, scaler, values, PASOS)
 
 """
@@ -174,18 +192,18 @@ true_and_prediction(y_true, y_pred, scaler, "prediccion")
 ********************************************************************
 """
 """
-Predicción acumulativa de 7 días
+Predicción acumulativa de 4 meses
 """
 print("*****************************************")
-print("Predicción 7 Dias")
+print("Predicción 4 meses")
 print("*****************************************")
-N = 7
+N = 4
 
-e_dt = np.datetime64("2021-09-23")
-s_dt = e_dt - PASOS
+e_dt = datetime.datetime(2023, 12, 1, 0, 0, 0)
+s_dt = e_dt - relativedelta(months=PASOS-1)
 
-start = np.datetime_as_string(s_dt)
-end = np.datetime_as_string(e_dt)
+# start = np.datetime_as_string(s_dt)
+# end = np.datetime_as_string(e_dt)
 
 values = df[s_dt:e_dt].values.astype('float32')
 n_pred, acc = predict_n_days(model, scaler, values, PASOS, N)

@@ -12,14 +12,16 @@ def scaling_comparison(data, scaled, outpath):
     ax[0].plot(data, color="blue")
     ax[1].plot(scaled, color="green")
     fig.savefig(outpath)
-    plt.show()
+    # plt.show()
+    plt.close(fig)
     
 def scaling_histogram_comparison(data, scaled, outpath):
     fig, ax = plt.subplots(nrows=1, ncols=2, figsize=(18,5), tight_layout=True)    
     ax[0].hist(data, bins=20, color="blue")
     ax[1].hist(scaled, bins=20, color="green")
     fig.savefig(outpath)
-    plt.show()
+    # plt.show()
+    plt.close(fig)
 
 def true_and_prediction(y_true, y_pred, scaler, filename):
     y_pred_inv = scaler.inverse_transform(y_pred)
@@ -44,7 +46,8 @@ def plot_accumulative_prediction(data, ndays):
     plt.legend(handles=[b_patch, o_patch])
     plt.title(f"Predicción {ndays} días")
     fig.savefig(FIGURE_PATH + f"prediccion_{ndays}.png")
-    plt.show()
+    # plt.show()
+    plt.close(fig)
     
     df = pd.DataFrame({"prediccion": data.ravel()})
     df.to_csv(REPORT_DATA + f"prediccion_{ndays}_days.csv", index=False)

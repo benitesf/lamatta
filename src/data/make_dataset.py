@@ -12,6 +12,21 @@ def xlsx_to_csv(filepath, sheet_name, cols, output):
     print(df.info())
     print("\n")
     df.to_csv(output)
+
+def xlsx_to_csv_2(filepath, sheet_name, cols, output):
+    """Lee un fichero xlsx, procesa y almacena en csv"""
+    df = pd.read_excel(filepath, sheet_name=sheet_name, usecols=cols)
+
+    # Creamos el campo fecha
+    df['AUX_FECHA'] = df['AÑO'].astype('str') + '-' + df['MES'].astype('str')
+    df['FECHA'] = pd.to_datetime(df['AUX_FECHA'], errors='coerce')
+    # df.set_index('FECHA', inplace=True)
+    df.drop(['AUX_FECHA', 'AÑO', 'MES', 'PRODUCTO'], axis=1, inplace=True)
+
+    # Calculamos el total Venta por dia (Acumulados)
+    df = df.groupby('FECHA', as_index=False)['CANTIDAD PRODUCIDA'].sum()
+    df.rename(columns={"CANTIDAD PRODUCIDA": "VENTAS"}, inplace=True)
+    df.to_csv(output, index=False)
     
 def split_train_test(filepath, train_range, test_range, output_path):
     df = pd.read_csv(filepath).set_index("FECHA")

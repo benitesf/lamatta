@@ -5,6 +5,10 @@ from src.features.build_features import series_to_supervised
 import keras
 import numpy as np
 
+import psutil
+import tracemalloc
+import time
+
 def predict(model_file, x_val):
     model = keras.models.load_model(model_file)
     return model.predict(x_val)
@@ -46,6 +50,22 @@ def predict_test(model, scaler, data, pasos):
     x = x.reshape((x.shape[0], 1, x.shape[1]))
 
     """PREDICCION"""
+    tracemalloc.start()
+    current, peak = tracemalloc.get_traced_memory()
+    t_0 = time.time()
+    
     y_pred = model.predict(x)
+    
+    t_1 = time.time()
+
+    """se finaliza el uso de CPU en el entrenamiento"""
+    print("\nMétricas de TESTING:\n")
+    print('CPU usado es: ', psutil.cpu_percent(4))
+
+    """Se finaliza el proceso de uso de memoria en el entrenamiento"""
+    current, peak = tracemalloc.get_traced_memory()
+
+    print(f"La cantidad de memoria usada actualmente es {current / 10**6}MB; el pico fue de {peak / 10**6}MB\n\n")
+    tracemalloc.stop()    
 
     return y, y_pred 

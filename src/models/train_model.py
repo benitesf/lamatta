@@ -13,7 +13,7 @@ def train(input, pasos, epochs, output):
     df = pd.read_csv(input)
     values = df.values
     
-    sep = values.shape[0] - 30
+    sep = values.shape[0] - 15
     
     train = values[:sep, :]
     val = values[sep + 1:, :]
