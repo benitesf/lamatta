@@ -1,2 +1,2 @@
 # lamatta
-A machine learning project for a client
+A machine learning project for sales prediction
